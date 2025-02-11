@@ -42,6 +42,34 @@ class GitRepository(object):
             if vers != 0:
                 raise Exception(f"Unsupported repositoryformatversion: {vers}")
 
+def repo_path(repo, *path):
+    """Compute path under repo's gitdir."""
+    return os.path.join(repo.gitdir, *path)
+
+def repo_file(repo, *path, mkdir=False):
+    """
+        Same as repo_path, but create dirname(*path) if absent. For example,
+        repo_file(r, \"refs\", \"remote\", \"origin\", \"HEAD\") will create
+        .git/refs/remote/origin.
+    """
+
+    if repo_dir(repo, *path[:-1], mkdir=mkdir):
+        return repo_path(repo, *path)
+
+def repo_dir(repo, *path, mkdir=False):
+    """
+        Same as repo_path, but mkdir *path if absent
+        if mkdir.
+    """
+
+    path = repo_path(repo, *path)
+
+    if os.path.exists(path):
+        if (os.path.isdir(path)):
+            return path
+        else:
+            raise Exception(f"Not a directory {path}")
+
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
