@@ -69,6 +69,13 @@ def repo_dir(repo, *path, mkdir=False):
             return path
         else:
             raise Exception(f"Not a directory {path}")
+    
+    if mkdir:
+        os.makedirs(path)
+        return path
+    else:
+        return None
+
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
