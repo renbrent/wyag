@@ -76,6 +76,52 @@ def repo_dir(repo, *path, mkdir=False):
     else:
         return None
 
+def repo_create(path):
+    """
+        Create a new repository at path.
+    """
+
+    repo = GitRepository(path, True)
+
+    # Check if path either doesn't exist or is an empty dir
+    if os.path.exists(repo.worktree):
+        if not os.path.isdir(repo.worktree):
+            raise Exception(f"{path} is not a directory!")
+        if os.path.exists(repo.gitdir) and os.listdir(repo.gitdir):
+            raise Exception(f"{path} is not empty!")
+    else: 
+        os.makedirs(repo.worktree)
+
+    assert repo_dir(repo, "branchs", mkdir=True)
+    assert repo_dir(repo, "objects", mkdir=True)
+    assert repo_dir(repo, "refs", "tags", mkdir=True)
+    assert repo_dir(repo, "refs", "heads", mkdir=True)
+
+    # .git/description
+    with open(repo_file(repo, "description"), "w") as f:
+        f.write("Unnamed repository; edit this 'discription' to name the repository.\n")
+
+    # .git/HEAD
+    with open(repo_file(repo, "HEAD"), "w") as f:
+        f.write("ref: refs/heads/master\n")
+
+    with open(repo_file(repo, "config"), "w") as f:
+        config = repo_default_config()
+        config.write(f)
+
+    return repo
+
+def repo_default_config():
+    ret = configparser.ConfigParser()
+
+    ret.add_section("core")
+    ret.set("core", "repositoryformatversion", "0")
+    ret.set("core", "filemode", "false")
+    ret.set("core", "bare", "false")
+
+    return ret
+
+
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
