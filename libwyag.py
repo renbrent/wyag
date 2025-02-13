@@ -218,6 +218,15 @@ def object_write(obj, repo=None):
 
     return sha
 
+class GitBlob(GitObject):
+    fmt = b'blob'
+
+    def serialize(self):
+        return self.blobdata
+
+    def deserialize(self, data):
+        self.blobdata = data
+
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
