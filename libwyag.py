@@ -37,6 +37,37 @@ def cat_file(repo, obj, fmt=None):
 def object_find(repo, name, fmt=None, follow=True):
     return name
 
+arg_hash = argsubparsers.add_parser("hash-object", help="Compute object ID and optionally creates a blob from a file")
+arg_hash.add_argument("-t", metavar="type", dest="type", choices=["blob", "commit", "tag", "tree"], default="blob", help="Specify the type")
+arg_hash.add_argument("-w", action="store_true", dest="write", help="Write the object into the database")
+arg_hash.add_argument("path", help="Read object from <file>")
+
+def cmd_hash_object(args):
+    if args.write:
+        repo = repo_find()
+    else:
+        repo = None
+    
+    with open(args.path, "rb") as fd:
+        sha = object_hash(fd, args.type.encode(), repo)
+        print(sha)
+
+def object_hash(fd, fmt, repo=NOne):
+    """
+        Hash object, writing it to repo if provided.
+    """
+    data =fd.read()
+
+    # Choose constructor
+    match fmt:
+        case b'commit' : obj=GitCommit(data)
+        case b'tree'   : obj=GitTree(data)
+        case b'tag'    : obj=GitTag(data)
+        case b'blob'   : obj=GitBlob(data)
+        case _: raise Exception(f"Unknown type {fmt}!")
+
+    return object_write(obj, repo)
+
 class GitRepository(object):
     """A git repository"""
 
