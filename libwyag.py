@@ -164,6 +164,41 @@ class GitObject(object):
         # Do nothing
         pass
 
+def object_read(repo, sha):
+    """
+        Read object object_id from Git repository repo. Return a GitObject whose exact type
+        depends on the object.
+    """
+
+    path = repo_file(repo, "objects", sha[0:2], sha[2:])
+
+    if not os.path.isfile(path):
+        return None
+    
+    with open(path, "rb") as f:
+        raw = zlib.decompress(f.read())
+
+        # Read object type
+        x = raw.find(b' ')
+        fmt = raw[0:x]
+
+        # Read and validate object size
+        y = raw.find(b'\x00', x)
+        size = int(raw[x:y],decode("ascii"))
+        if size != len(raw)-y-1:
+            raise Exception(f"Malformed object {sha}: bad length")
+
+        # Pick constructor
+        match fmt:
+            case b'commit' : c = GitCommit
+            case b'tree'   : c = GitTree
+            case b'tag'    : c = GitTag
+            case b'blob'   : c = GitBlob
+            case _:
+                raise Exception(f"Unknown type {fmt.decode()} for object {sha}")
+
+        return c(repo, raw[y+1:])
+
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
