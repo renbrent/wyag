@@ -14,8 +14,28 @@ import zlib
 argparser = argparse.ArgumentParser(description="The stupidest content tracker")
 argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
 argsubparsers.required = True
-argsp = argsubparsers.add_parser("init", help="Initialize a new, empty repository.")
-argsp.add_argument("path", metavar="directory", nargs="?", default=".", help="Where to create the repository")
+
+arg_init = argsubparsers.add_parser("init", help="Initialize a new, empty repository.")
+arg_init.add_argument("type", choices=["blob", "commit", "tag", "tree"], help="Specify the type")
+arg_init.add_argument("path", metavar="directory", nargs="?", default=".", help="Where to create the repository")
+
+def cmd_init(args):
+    repo_create(args.path)
+
+arg_cat = argsubparsers.add_parser("cat-file", help="Provide content of repository objects")
+arg_cat.add_argument("type", choices=["blob", "commit", "tag", "tree"], help="Specify the type")
+arg_cat.add_argument("object", help="The object to display")
+
+def cmd_cat_file(args):
+    repo = repo_find()
+    cat_file(repo, args.object, fmt=args.type)
+
+def cat_file(repo, obj, fmt=None):
+    obj = object_read(repo, object_find(repo, obj, fmt=fmt))
+    sys.stdout.buffer.write(obj.serialize())
+
+def object_find(repo, name, fmt=None, follow=True):
+    return name
 
 class GitRepository(object):
     """A git repository"""
@@ -140,8 +160,7 @@ def repo_find(path=".", required=True):
     return repo_find(parent, required)
 
 
-def cmd_init(args):
-    repo_create(args.path)
+
 class GitObject(object):
     
     def __init__(self, repo, data=None):
