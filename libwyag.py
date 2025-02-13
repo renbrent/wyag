@@ -142,6 +142,28 @@ def repo_find(path=".", required=True):
 
 def cmd_init(args):
     repo_create(args.path)
+class GitObject(object):
+    
+    def __init__(self, repo, data=None):
+        self.repo = repo
+
+        if data != None:
+            self.deserialize(data)
+    
+    def serialize(self, repo):
+        """This function MUST be implemented by subclasses.
+        It must read the object's contents from self.data, a byte string, and do
+        whatever it takes to convert it into a meaningful representation. What exactly
+        that means depends on each subclass."""
+        raise Exception("Unimplemented")
+
+    def deserialize(self, data):
+        raise Exception("Unimplemented")
+
+    def init(self):
+        # Do nothing
+        pass
+
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
