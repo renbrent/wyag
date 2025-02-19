@@ -319,6 +319,17 @@ def kvlm_serialize(kvlm):
 
     return ret
 
+class GitCommit(GitObject):
+    fmt = b'commit'
+
+    def serialize(self):
+        return self.kvlm_serialize()
+
+    def deserialize(self, data):
+        self.kvlm = kvlm_parse(data)
+
+    def init(self):
+        self.kvlm = dict()
 
 class GitBlob(GitObject):
     fmt = b'blob'
