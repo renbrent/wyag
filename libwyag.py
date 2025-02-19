@@ -52,7 +52,7 @@ def cmd_hash_object(args):
         sha = object_hash(fd, args.type.encode(), repo)
         print(sha)
 
-def object_hash(fd, fmt, repo=NOne):
+def object_hash(fd, fmt, repo=None):
     """
         Hash object, writing it to repo if provided.
     """
@@ -67,6 +67,47 @@ def object_hash(fd, fmt, repo=NOne):
         case _: raise Exception(f"Unknown type {fmt}!")
 
     return object_write(obj, repo)
+
+arg_log = argsubparsers.add_parser("log", help="Display history of a given commit.")
+arg_log.add_argument("commit", default="HEAD", nargs="?", help="Commit to start at.")
+
+def cmd_log(args):
+    repo = repo_find()
+    print("digraph wyaglog{")
+    print(" node [shape=box];")
+    log_graphviz(repo, object_find(repo, args.commit), set())
+    print("}")
+
+def log_graphviz(repo, sha, seen):
+
+    if sha in seen:
+        return
+    seen.add(sha)
+
+    commit = object_read(repo, sha)
+    message = commit.kvlm[None].decode("utf8").strip()
+    message = message.replace("\\", "\\\\")
+    message = message.replace("\"", "\\\"")
+
+    if "\n" in message:
+        message = message[:message.index("\n")]
+
+    print(f"    c_{sha} [label=\"{sha[0:7]}: {message}\"]")
+    assert commit.fmt==b'commit'
+
+    if not b'parent' in commit.kvlm.keys():
+        return
+
+    parents = commit.kvlm[b'parent']
+
+    if type(parents) != list:
+        parents = [parents]
+
+    for p in parents:
+        p = p.decode("ascii")
+        print(f"    c_{sha} -> c_{p}")
+        log_graphviz(repo, p, seen)
+
 
 class GitRepository(object):
     """A git repository"""
