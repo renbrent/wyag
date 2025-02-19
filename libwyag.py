@@ -300,6 +300,25 @@ def kvlm_parse(raw, start=0, dct=None):
     
     return kvlm_parse(raw, start=end+1, dct=dct)
 
+def kvlm_serialize(kvlm):
+    ret = b''
+
+    for k in kvlm.keys():
+        if k == None:
+            continue
+
+        val = kvlm[k]
+        if type(val) != list:
+            val = [val]
+
+        for v in val:
+            ret += k + b' ' + (v.replace(b'\n', b'\n ')) + b'\n'
+
+        
+    ret += b'\n' + kvlm[None]
+
+    return ret
+
 
 class GitBlob(GitObject):
     fmt = b'blob'
